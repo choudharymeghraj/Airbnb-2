@@ -1,0 +1,532 @@
+/* =====================================================
+   Global Reset & Base
+===================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", sans-serif !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #ffffff;
+}
+
+/* =====================================================
+   Bootstrap Row Fix (LEFT ALIGNMENT FIX)
+===================================================== */
+.row {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
+/* =====================================================
+   Main Container (Balanced & Compact)
+===================================================== */
+.container {
+  flex: 1;
+  max-width: 100%;
+  padding: 1.25rem 3rem;
+  /* ⬅ reduced top padding */
+}
+
+/* Tablet */
+@media (max-width: 992px) {
+  .container {
+    padding: 1.25rem 2rem;
+  }
+}
+
+/* Mobile */
+@media (max-width: 576px) {
+  .container {
+    padding: 1rem 1rem;
+  }
+}
+
+/* =====================================================
+   Navbar
+===================================================== */
+.navbar {
+  height: 5rem;
+  background-color: #ffffff;
+  padding: 0 1.25rem;
+}
+
+.fa-compass {
+  color: #fe424d;
+  font-size: 2rem;
+}
+
+.navbar-brand {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.nav-link {
+  color: #222222 !important;
+  font-weight: 500;
+  padding: 0.5rem 0.75rem;
+}
+
+.nav-link:hover {
+  color: #fe424d !important;
+}
+
+/* =====================================================
+   Navbar Search
+===================================================== */
+.nav-search {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.nav-search form {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  border-radius: 25px !important;
+  padding: 0.7rem 1.5rem !important;
+  font-size: 0.95rem;
+  border: 1px solid #dddddd;
+}
+
+.search-input:focus {
+  border-color: #cdcdcd;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.search-btn-primary {
+  border-radius: 25px !important;
+  background-color: #ff385c !important;
+  color: #ffffff !important;
+  padding: 0.7rem 1.25rem !important;
+  border: none !important;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  white-space: nowrap;
+}
+
+.search-btn-primary:hover {
+  background-color: #d93b53 !important;
+}
+
+@media (max-width: 768px) {
+  .nav-search {
+    max-width: 100%;
+    margin: 0;
+  }
+}
+
+/* =====================================================
+   Listing Filters (GAP REDUCED)
+===================================================== */
+.listing-filters {
+  position: sticky;
+  top: 0;
+  z-index: 900;
+  background-color: #ffffff;
+  padding: 0.5rem 0;
+  /* ⬅ reduced */
+  margin-bottom: 0.75rem;
+  /* ⬅ tighter gap */
+  max-width: 100%;
+}
+
+.filters-container {
+  width: 100%;
+  max-width: 100%;
+}
+
+.filters-actions {
+  gap: 0.75rem !important;
+}
+
+/* Divider under filters */
+.listing-filters hr {
+  margin: 0.5rem 0;
+}
+
+@media (max-width: 991px) {
+  .listing-filters {
+    position: static;
+  }
+}
+
+/* =====================================================
+   Category Scroller
+===================================================== */
+.category-scroller {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.category-row {
+  display: flex;
+  gap: 1.5rem;
+  padding: 0 0.5rem;
+  max-width: 100%;
+  scrollbar-width: thin;
+  scrollbar-color: #cfcfcf transparent;
+}
+
+.category-row::-webkit-scrollbar {
+  height: 6px;
+}
+
+.category-row::-webkit-scrollbar-thumb {
+  background-color: #cfcfcf;
+  border-radius: 4px;
+}
+
+.category-item {
+  min-width: 64px;
+  color: #5a5a5a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.35rem 0.35rem;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.category-item i {
+  font-size: 1.05rem;
+}
+
+.category-item small {
+  font-size: 0.75rem;
+}
+
+.category-item:hover,
+.category-item.active {
+  color: #ff5a5f;
+  border-bottom-color: #ff5a5f;
+}
+
+/* =====================================================
+   Listings / Cards
+===================================================== */
+.listing-card {
+  border: none !important;
+  margin-bottom: 2rem;
+}
+
+/* Remove extra top gap before first row */
+.container>.row:first-child {
+  margin-top: 0 !important;
+}
+
+.card-img-top {
+  width: 100% !important;
+  border-radius: 1rem !important;
+  object-fit: cover !important;
+}
+
+.card-body {
+  padding: 0 !important;
+}
+
+.card-img-overlay {
+  opacity: 0;
+}
+
+.card:hover .card-img-overlay {
+  opacity: 0.2;
+  background-color: #ffffff;
+}
+
+/* =====================================================
+   Buttons
+===================================================== */
+.add-btn,
+.save-btn {
+  background-color: #fe424d !important;
+  border-color: #fe424d !important;
+  color: #ffffff !important;
+}
+
+.add-btn:hover,
+.save-btn:hover {
+  background-color: #e33a3d !important;
+  border-color: #e33a3d !important;
+}
+
+/* =====================================================
+   Tax Toggle
+===================================================== */
+.tax-toggle {
+  border: 1px solid #dddddd;
+  border-radius: 12px;
+  padding: 0.7rem 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: #ffffff;
+}
+
+.tax-toggle:hover {
+  border-color: #222222;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.tax-toggle label {
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+/* =====================================================
+   Footer
+===================================================== */
+footer {
+  margin-top: auto;
+}
+
+.f-info {
+  background-color: #f2f2f2;
+  text-align: center;
+  padding: 1.25rem 0;
+}
+
+.f-info-links a {
+  color: #222222;
+  text-decoration: none;
+  margin: 0 0.5rem;
+}
+
+.f-info-links a:hover {
+  text-decoration: underline;
+}
+
+.f-info-social {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.f-info-social i {
+  font-size: 1.1rem;
+  color: #222222;
+}
+
+.f-info-brand {
+  font-weight: 500;
+  color: #222222;
+}
+
+/* =====================================================
+   Review Section Styling
+===================================================== */
+/* =====================================================
+   Review Section Styling - Updated
+===================================================== */
+.reviews-section {
+  margin-top: 0;
+  padding-top: 0;
+}
+
+.review-textarea {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1rem;
+  font-size: 1rem;
+  resize: none;
+  background-color: #f7f7f7;
+  transition: all 0.2s;
+}
+
+.review-textarea:focus {
+  background-color: #fff;
+  border-color: #222;
+  box-shadow: 0 0 0 1px #222;
+}
+
+.review-header-icon {
+  font-size: 1.5rem;
+  color: #ffc107;
+  /* Star color */
+}
+
+.review-card {
+  padding: 1.5rem 0;
+  border: none;
+  border-bottom: 1px solid #ebebeb;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.review-card:last-child {
+  border-bottom: none;
+}
+
+.review-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.review-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.review-author-name {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  font-size: 1rem;
+}
+
+.review-comment {
+  color: #484848;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+.btn-delete-review {
+  background: transparent;
+  border: 1px solid #e0e0e0;
+  color: #484848;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete-review:hover {
+  background: #f7f7f7;
+  border-color: #222;
+}
+
+.login-cta-box {
+  background-color: #f7f7f7;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  margin-bottom: 0;
+}
+
+.login-cta-box p {
+  font-size: 1rem;
+  color: #484848;
+  font-weight: 500;
+}
+
+.stars-icon {
+  color: #ffc107;
+  font-size: 1.8rem;
+  margin-right: 0.5rem;
+}
+
+.chat-icon {
+  color: #008489;
+  font-size: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+/* Empty State */
+.empty-reviews {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: #717171;
+  background: #f7f7f7;
+  border-radius: 12px;
+}
+
+/* Starability Fade Override to match yellow stars if needed, but default is usually good.
+   Ensure input-no-rate is hidden correctly.
+*/
+.starability-fade>input:checked~label,
+.starability-fade>input:hover~label {
+  color: #ffc107;
+}
+
+/* Helper for alignment */
+.d-flex.align-items-center.gap-2.mb-4 h4,
+.d-flex.align-items-center.gap-2.mb-4 h5 {
+  margin-bottom: 0;
+}
+
+/* =====================================================
+   Booking Card Styling
+===================================================== */
+.booking-card-wrapper {
+  padding-left: 1rem;
+}
+
+@media (max-width: 991px) {
+  .booking-card-wrapper {
+    padding-left: 0;
+    margin-top: 2rem;
+  }
+}
+
+.booking-card-wrapper .card {
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12) !important;
+  border: 1px solid #e0e0e0;
+}
+
+.booking-card-wrapper .card:hover {
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* =====================================================
+   Starability Customization
+===================================================== */
+/* Hide all text inside fieldset that shouldn't show */
+fieldset.starability-fade > legend {
+  display: none !important;
+  position: absolute !important;
+  width: 0 !important;
+  height: 0 !important;
+  overflow: hidden !important;
+}
+
+/* Hide the text of labels, show only the star icons */
+fieldset.starability-fade > label {
+  font-size: 0 !important;
+  color: transparent !important;
+  text-indent: -9999px !important;
+}
+
+/* Ensure proper star rendering */
+fieldset.starability-fade {
+  display: inline-flex !important;
+  gap: 2px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+}
