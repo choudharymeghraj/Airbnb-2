@@ -53,7 +53,11 @@
                     <input type="date" name="booking[checkOut]" class="form-control border-0 p-0 shadow-none" style="font-size: 0.875rem;" required>
                   </div>
                 </div>
-                <div class="p-2">
+                <div class="p-2 border-top">
+                  <label class="small fw-bold text-uppercase d-block text-muted" style="font-size: 0.65rem;">Nights</label>
+                  <input type="number" name="booking[nights]" id="nightsInput" class="form-control border-0 p-0 shadow-none" style="font-size: 0.875rem;" value="5" min="1" required>
+                </div>
+                <div class="p-2 border-top">
                   <label class="small fw-bold text-uppercase d-block text-muted" style="font-size: 0.65rem;">Guests</label>
                   <select name="booking[guests]" class="form-select border-0 p-0 shadow-none text-dark" style="font-size: 0.875rem;">
                     <option value="1">1 guest</option>
@@ -68,8 +72,8 @@
 
               <div class="mt-3 pt-2 border-top">
                 <div class="d-flex justify-content-between mb-2" style="font-size: 0.875rem;">
-                  <span class="text-decoration-underline">&#8377;<%= listing.price %> x 5 nights</span>
-                  <span>&#8377;<%= (listing.price * 5).toLocaleString("en-IN") %></span>
+                  <span class="text-decoration-underline">&#8377;<%= listing.price %> x <span id="nightsDisplay">5</span> nights</span>
+                  <span id="nightsPriceDisplay">&#8377;<%= (listing.price * 5).toLocaleString("en-IN") %></span>
                 </div>
                 <div class="d-flex justify-content-between mb-2" style="font-size: 0.875rem;">
                   <span class="text-decoration-underline">Service fee</span>
@@ -78,7 +82,7 @@
                 <hr class="my-2">
                 <div class="d-flex justify-content-between fw-bold" style="font-size: 1rem;">
                   <span>Total</span>
-                  <span>&#8377;<%= (listing.price * 5 + 2500).toLocaleString("en-IN") %></span>
+                  <span id="totalPriceDisplay">&#8377;<%= (listing.price * 5 + 2500).toLocaleString("en-IN") %></span>
                 </div>
               </div>
             </form>
@@ -230,3 +234,25 @@
     </div>
 
   </div>
+
+<script>
+  const pricePerNight = <%= listing.price %>;
+  const serviceFee = 2500;
+  const nightsInput = document.getElementById('nightsInput');
+  const nightsDisplay = document.getElementById('nightsDisplay');
+  const nightsPriceDisplay = document.getElementById('nightsPriceDisplay');
+  const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+
+  function updatePrice() {
+    const nights = parseInt(nightsInput.value) || 5;
+    const nightsPrice = pricePerNight * nights;
+    const total = nightsPrice + serviceFee;
+
+    nightsDisplay.textContent = nights;
+    nightsPriceDisplay.textContent = '₹' + nightsPrice.toLocaleString('en-IN');
+    totalPriceDisplay.textContent = '₹' + total.toLocaleString('en-IN');
+  }
+
+  nightsInput.addEventListener('change', updatePrice);
+  nightsInput.addEventListener('input', updatePrice);
+</script>

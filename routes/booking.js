@@ -11,7 +11,7 @@ router.post("/listings/:id/book", isLoggedIn, async (req, res) => {
         const listing = await Listing.findById(id);
 
         // 1. Extract data from the form
-        const { checkIn, checkOut, guests } = req.body.booking;
+        const { checkIn, checkOut, guests, nights } = req.body.booking;
 
         // 2. Convert strings to Date objects
         const start = new Date(checkIn);
@@ -24,12 +24,17 @@ router.post("/listings/:id/book", isLoggedIn, async (req, res) => {
         }
 
         // 4. Calculate Total Price
-        // timeDiff is in milliseconds, so we convert to days
-        const timeDiff = end.getTime() - start.getTime();
-        const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        // Use the nights value from the form (with fallback to calculated nights)
+        let calculatedNights = nights ? parseInt(nights) : null;
+        
+        if (!calculatedNights || calculatedNights < 1) {
+            // Fallback to calculate from dates if nights not provided
+            const timeDiff = end.getTime() - start.getTime();
+            calculatedNights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        }
 
         // Base Price * Nights + Service Fee (2500 is dummy service fee)
-        const totalPrice = (listing.price * nights) + 2500;
+        const totalPrice = (listing.price * calculatedNights) + 2500;
 
         // 5. Create and Save the Booking
         const newBooking = new Booking({
@@ -88,7 +93,7 @@ router.get("/bookings/:id/edit", isLoggedIn, async (req, res) => {
 router.put("/bookings/:id", isLoggedIn, async (req, res) => {
     try {
         const { id } = req.params;
-        const { checkIn, checkOut, guests } = req.body.booking;
+        const { checkIn, checkOut, guests, nights } = req.body.booking;
 
         const booking = await Booking.findById(id).populate("listing");
         if (!booking) {
@@ -105,9 +110,16 @@ router.put("/bookings/:id", isLoggedIn, async (req, res) => {
             return res.redirect(`/bookings/${id}/edit`);
         }
 
-        const timeDiff = end.getTime() - start.getTime();
-        const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
-        const totalPrice = (booking.listing.price * nights) + 2500;
+        // Use the nights value from the form (with fallback to calculated nights)
+        let calculatedNights = nights ? parseInt(nights) : null;
+        
+        if (!calculatedNights || calculatedNights < 1) {
+            // Fallback to calculate from dates if nights not provided
+            const timeDiff = end.getTime() - start.getTime();
+            calculatedNights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        }
+
+        const totalPrice = (booking.listing.price * calculatedNights) + 2500;
 
         // Update fields
         booking.checkIn = start;

@@ -25,13 +25,35 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-bold small text-uppercase text-muted">Guests</label>
-                        <select name="booking[guests]" class="form-select">
-                            <option value="1" <%=booking.guests===1 ? 'selected' : '' %>>1 guest</option>
-                            <option value="2" <%=booking.guests===2 ? 'selected' : '' %>>2 guests</option>
-                            <option value="3" <%=booking.guests===3 ? 'selected' : '' %>>3 guests</option>
-                        </select>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Nights</label>
+                            <input type="number" name="booking[nights]" id="nightsInput" class="form-control" min="1" value="<%= Math.ceil((booking.checkOut - booking.checkIn) / (1000 * 3600 * 24)) %>" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-muted">Guests</label>
+                            <select name="booking[guests]" class="form-select">
+                                <option value="1" <%=booking.guests===1 ? 'selected' : '' %>>1 guest</option>
+                                <option value="2" <%=booking.guests===2 ? 'selected' : '' %>>2 guests</option>
+                                <option value="3" <%=booking.guests===3 ? 'selected' : '' %>>3 guests</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="border rounded-3 p-3 mb-3 bg-light">
+                        <div class="d-flex justify-content-between mb-2" style="font-size: 0.875rem;">
+                            <span class="text-decoration-underline">₹<%= booking.listing.price %> x <span id="nightsDisplay"><%= Math.ceil((booking.checkOut - booking.checkIn) / (1000 * 3600 * 24)) %></span> nights</span>
+                            <span id="nightsPriceDisplay">₹<%= booking.listing.price * Math.ceil((booking.checkOut - booking.checkIn) / (1000 * 3600 * 24)) %></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2" style="font-size: 0.875rem;">
+                            <span class="text-decoration-underline">Service fee</span>
+                            <span>₹2,500</span>
+                        </div>
+                        <hr class="my-2">
+                        <div class="d-flex justify-content-between fw-bold" style="font-size: 1rem;">
+                            <span>Total</span>
+                            <span id="totalPriceDisplay">₹<%= (booking.listing.price * Math.ceil((booking.checkOut - booking.checkIn) / (1000 * 3600 * 24))) + 2500 %></span>
+                        </div>
                     </div>
 
                     <button class="btn btn-danger w-100 py-2 fw-bold" style="background: #ff385c;">Update
@@ -40,3 +62,25 @@
             </div>
         </div>
     </div>
+
+<script>
+  const pricePerNight = <%= booking.listing.price %>;
+  const serviceFee = 2500;
+  const nightsInput = document.getElementById('nightsInput');
+  const nightsDisplay = document.getElementById('nightsDisplay');
+  const nightsPriceDisplay = document.getElementById('nightsPriceDisplay');
+  const totalPriceDisplay = document.getElementById('totalPriceDisplay');
+
+  function updatePrice() {
+    const nights = parseInt(nightsInput.value) || 1;
+    const nightsPrice = pricePerNight * nights;
+    const total = nightsPrice + serviceFee;
+
+    nightsDisplay.textContent = nights;
+    nightsPriceDisplay.textContent = '₹' + nightsPrice.toLocaleString('en-IN');
+    totalPriceDisplay.textContent = '₹' + total.toLocaleString('en-IN');
+  }
+
+  nightsInput.addEventListener('change', updatePrice);
+  nightsInput.addEventListener('input', updatePrice);
+</script>

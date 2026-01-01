@@ -96,6 +96,14 @@ app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
 app.use("/", bookingRouter); // <--- NEW: Connected Booking Routes here
 
+app.get("/privacy", (req, res) => {
+    res.render("privacy.ejs");
+});
+
+app.get("/terms", (req, res) => {
+    res.render("terms.ejs");
+});
+
 // -------------------- 404 HANDLER --------------------
 app.all(/(.*)/, (req, res, next) => {
     next(new ExpressError(404, "Page Not Found"));
