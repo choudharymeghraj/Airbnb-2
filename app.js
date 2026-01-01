@@ -21,6 +21,7 @@ const bookingRouter = require("./routes/booking.js"); // <--- NEW: Imported Book
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
+
 // -------------------- DATABASE --------------------
 async function ensureListingIndexes() {
     try {
@@ -51,7 +52,8 @@ app.engine("ejs", ejsMate);
 // -------------------- MIDDLEWARE --------------------
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride("_method"));
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "/public")));
+
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // -------------------- SESSION --------------------

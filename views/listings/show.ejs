@@ -1,12 +1,10 @@
 <% layout('/layouts/boilerplate') %>
 
-  <div class="container mt-3">
+<div class="container mt-3">
 
     <div class="row mt-3 mb-3">
       <div class="col-12">
-        <h3 class="fw-bold fs-2">
-          <%= listing.title %>
-        </h3>
+        <h3 class="fw-bold fs-2"><%= listing.title %></h3>
         <p class="text-muted fw-semibold">
           <i class="fas fa-map-marker-alt text-danger"></i>
           <%= listing.location %>, <%= listing.country %>
@@ -33,9 +31,11 @@
                 <span class="text-muted small"> night</span>
               </div>
               <div class="text-muted" style="font-size: 0.875rem;">
-                <i class="fas fa-star text-warning"></i> 4.8 &middot; <u>
-                  <%= listing.reviews.length %> reviews
-                </u>
+                <% if(listing.reviews.length > 0) { %>
+                  <% const avgRating = (listing.reviews.reduce((sum, r) => sum + r.rating, 0) / listing.reviews.length).toFixed(1); %>
+                  <i class="fas fa-star text-warning"></i> <%= avgRating %> &middot; 
+                <% } %>
+                <u><%= listing.reviews.length %> reviews</u>
               </div>
             </div>
 
@@ -95,8 +95,7 @@
                   <button class="btn btn-outline-danger btn-sm">Delete</button>
                 </form>
               </div>
-              <% } %>
-
+            <% } %>
           </div>
         </div>
       </div>
@@ -133,6 +132,76 @@
           </div>
         </div>
 
+        <!-- ========== ALL REVIEWS SECTION (MOVED UP) ========== -->
+        <% if(listing.reviews.length > 0) { %>
+          <div class="reviews-section mb-4 pb-3 border-bottom">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <i class="fas fa-comments text-info fs-5"></i>
+              <h5 class="fw-bold mb-0" style="font-size: 1.1rem;">All Reviews (<%= listing.reviews.length %>)</h5>
+            </div>
+
+            <!-- Average Rating Box -->
+            <% 
+            const totalRating = listing.reviews.reduce((sum, r) => sum + r.rating, 0);
+            const avgRating = totalRating / listing.reviews.length;
+            %>
+            
+            <div class="average-rating-box">
+              <div class="average-rating-number"><%= avgRating.toFixed(1) %></div>
+              <div class="average-rating-stars">
+                <% for(let i = 1; i <= 5; i++) { %>
+                  <span class="star <%= i <= Math.round(avgRating) ? 'filled' : '' %>">★</span>
+                <% } %>
+              </div>
+              <div class="total-reviews-text">
+                Based on <%= listing.reviews.length %> review<%= listing.reviews.length !== 1 ? 's' : '' %>
+              </div>
+            </div>
+
+            <!-- Individual Reviews -->
+            <div class="row">
+              <% for(review of listing.reviews) { %>
+                <div class="col-12 mb-2">
+                  <div class="review-card">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div class="d-flex gap-3">
+                        <div class="review-avatar">
+                          <%= review.author.username.charAt(0).toUpperCase() %>
+                        </div>
+                        <div>
+                          <h6 class="review-author-name mb-1">
+                            <%= review.author.username %>
+                          </h6>
+                          <small class="text-muted d-block">Verified Guest</small>
+                          
+                          <!-- Display Stars for Review -->
+                          <div class="review-stars">
+                            <% for(let i = 1; i <= 5; i++) { %>
+                              <span class="star <%= i <= review.rating ? 'filled' : '' %>">★</span>
+                            <% } %>
+                          </div>
+                        </div>
+                      </div>
+                      <% if(currUser && currUser._id.equals(review.author._id)) {%>
+                        <form method="POST"
+                          action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
+                          <button class="btn-delete-review">
+                            <i class="fas fa-trash-alt me-1"></i> Delete
+                          </button>
+                        </form>
+                      <% } %>
+                    </div>
+                    <p class="review-comment mt-2 mb-0">
+                      <%= review.comment %>
+                    </p>
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        <% } %>
+
+        <!-- ========== LEAVE A REVIEW FORM ========== -->
         <% if(currUser) { %>
           <div class="mb-4 pb-3 border-bottom">
             <div class="d-flex align-items-center gap-2 mb-3">
@@ -140,22 +209,30 @@
               <h5 class="fw-bold mb-0" style="font-size: 1.1rem;">Leave a Review</h5>
             </div>
             <form action="/listings/<%= listing.id %>/reviews" method="POST" novalidate class="needs-validation">
+              
+              <!-- Custom Star Rating Input -->
               <div class="mb-3">
-                <fieldset class="starability-fade">
-                  <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="0" checked
-                    aria-label="No rating." />
-                  <input type="radio" id="first-rate1" name="review[rating]" value="1" />
-                  <label for="first-rate1" title="Terrible">1</label>
-                  <input type="radio" id="first-rate2" name="review[rating]" value="2" />
-                  <label for="first-rate2" title="Not good">2</label>
-                  <input type="radio" id="first-rate3" name="review[rating]" value="3" />
-                  <label for="first-rate3" title="Average">3</label>
-                  <input type="radio" id="first-rate4" name="review[rating]" value="4" />
-                  <label for="first-rate4" title="Very good">4</label>
-                  <input type="radio" id="first-rate5" name="review[rating]" value="5" />
-                  <label for="first-rate5" title="Amazing">5</label>
-                </fieldset>
+                <label class="form-label fw-semibold mb-2" style="font-size: 0.9rem;">Rating</label>
+                <div class="star-rating-input">
+                  <input type="radio" id="star5" name="review[rating]" value="5" required>
+                  <label for="star5" class="star" title="Excellent">★</label>
+                  
+                  <input type="radio" id="star4" name="review[rating]" value="4">
+                  <label for="star4" class="star" title="Very Good">★</label>
+                  
+                  <input type="radio" id="star3" name="review[rating]" value="3">
+                  <label for="star3" class="star" title="Good">★</label>
+                  
+                  <input type="radio" id="star2" name="review[rating]" value="2">
+                  <label for="star2" class="star" title="Fair">★</label>
+                  
+                  <input type="radio" id="star1" name="review[rating]" value="1">
+                  <label for="star1" class="star" title="Poor">★</label>
+                </div>
+                <div class="rating-feedback"></div>
+                <div class="invalid-feedback">Please select a rating</div>
               </div>
+              
               <div class="mb-3">
                 <label for="comment" class="form-label fw-semibold mb-2" style="font-size: 0.9rem;">Comments</label>
                 <textarea name="review[comment]" id="comment" cols="30" rows="3" class="form-control review-textarea"
@@ -165,77 +242,34 @@
               <button class="btn btn-outline-dark px-4 py-2 fw-semibold rounded-pill">Submit</button>
             </form>
           </div>
-          <% } else { %>
-            <div class="mb-4 pb-3 border-bottom">
-              <div class="d-flex align-items-center gap-2 mb-3">
-                <i class="fas fa-star text-warning fs-5"></i>
-                <h5 class="fw-bold mb-0" style="font-size: 1.1rem;">Leave a Review</h5>
-              </div>
-              <div class="login-cta-box">
-                <p class="mb-3 text-muted">Log in to leave a review.</p>
-                <a href="/login" class="btn btn-outline-primary px-4 py-2 rounded-pill fw-semibold">Go to Login</a>
-              </div>
+        <% } else { %>
+          <div class="mb-4 pb-3 border-bottom">
+            <div class="d-flex align-items-center gap-2 mb-3">
+              <i class="fas fa-star text-warning fs-5"></i>
+              <h5 class="fw-bold mb-0" style="font-size: 1.1rem;">Leave a Review</h5>
             </div>
-            <% } %>
+            <div class="login-cta-box">
+              <p class="mb-3 text-muted">Log in to leave a review.</p>
+              <a href="/login" class="btn btn-outline-primary px-4 py-2 rounded-pill fw-semibold">Go to Login</a>
+            </div>
+          </div>
+        <% } %>
 
-              <% if(listing.reviews.length> 0) { %>
-                <div class="reviews-section">
-                  <div class="d-flex align-items-center gap-2 mb-3">
-                    <i class="fas fa-comments text-info fs-5"></i>
-                    <h5 class="fw-bold mb-0" style="font-size: 1.1rem;">All Reviews (<%= listing.reviews.length %>)</h5>
-                  </div>
+        <!-- Empty State (if no reviews) -->
+        <% if(listing.reviews.length === 0) { %>
+          <div class="text-center py-4 empty-reviews border-bottom mb-4 pb-3">
+            <i class="fas fa-comments text-muted fs-1 mb-3"></i>
+            <p class="text-muted mb-0">No reviews yet. Be the first to review!</p>
+          </div>
+        <% } %>
 
-                  <div class="row">
-                    <% for(review of listing.reviews) { %>
-                      <div class="col-12 mb-2">
-                        <div class="review-card">
-                          <div class="d-flex justify-content-between align-items-start">
-                            <div class="d-flex gap-3">
-                              <div class="review-avatar">
-                                <%= review.author.username.charAt(0).toUpperCase() %>
-                              </div>
-                              <div>
-                                <h6 class="review-author-name mb-1">
-                                  <%= review.author.username %>
-                                </h6>
-                                <small class="text-muted d-block">Verified Guest</small>
-                                <p class="starability-result mt-1 mb-0" data-rating="<%= review.rating %>"></p>
-                              </div>
-                            </div>
-                            <% if(currUser && currUser._id.equals(review.author._id)) {%>
-                              <form method="POST"
-                                action="/listings/<%= listing._id %>/reviews/<%= review._id %>?_method=DELETE">
-                                <button class="btn-delete-review">
-                                  <i class="fas fa-trash-alt me-1"></i> Delete
-                                </button>
-                              </form>
-                              <% } %>
-                          </div>
-                          <p class="review-comment mt-2 mb-0">
-                            <%= review.comment %>
-                          </p>
-                        </div>
-                      </div>
-                      <% } %>
-                  </div>
-                </div>
-                <% } else { %>
-                  <div class="reviews-section">
-                    <div class="d-flex align-items-center gap-2 mb-3">
-                      <i class="fas fa-comments text-info fs-5"></i>
-                      <h5 class="fw-bold mb-0" style="font-size: 1.1rem;">All Reviews (0)</h5>
-                    </div>
-                    <div class="text-center py-4 empty-reviews">
-                      <p class="text-muted mb-0">No reviews yet. Be the first to review!</p>
-                    </div>
-                  </div>
-                  <% } %>
       </div>
     </div>
 
   </div>
 
 <script>
+  // Booking price calculation
   const pricePerNight = <%= listing.price %>;
   const serviceFee = 2500;
   const nightsInput = document.getElementById('nightsInput');
@@ -255,4 +289,26 @@
 
   nightsInput.addEventListener('change', updatePrice);
   nightsInput.addEventListener('input', updatePrice);
+
+  // Star rating feedback
+  document.addEventListener('DOMContentLoaded', function() {
+    const ratingInputs = document.querySelectorAll('.star-rating-input input[type="radio"]');
+    const ratingFeedback = document.querySelector('.rating-feedback');
+    
+    if (ratingInputs.length > 0 && ratingFeedback) {
+      const labels = {
+        '1': 'Poor',
+        '2': 'Fair',
+        '3': 'Good',
+        '4': 'Very Good',
+        '5': 'Excellent'
+      };
+      
+      ratingInputs.forEach(input => {
+        input.addEventListener('change', function() {
+          ratingFeedback.textContent = labels[this.value];
+        });
+      });
+    }
+  });
 </script>
