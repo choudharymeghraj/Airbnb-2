@@ -1,6 +1,7 @@
 if (process.env.NODE_ENV !== "production") {
     require("dotenv").config();
 }
+
 const mongoose = require("mongoose");
 const express = require("express");
 const app = express();
@@ -14,10 +15,14 @@ const passport = require("passport");
 const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
 
+// ROUTERS
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
 const userRouter = require("./routes/user.js");
-const bookingRouter = require("./routes/booking.js"); // <--- NEW: Imported Booking Route
+const bookingRouter = require("./routes/booking.js");
+
+// Razorpay verification dependencies
+const crypto = require("crypto");
 
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
@@ -44,17 +49,20 @@ async function main() {
 }
 main().catch(err => console.log(err));
 
+
 // -------------------- VIEW ENGINE --------------------
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.engine("ejs", ejsMate);
 
+
 // -------------------- MIDDLEWARE --------------------
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 app.use(methodOverride("_method"));
 app.use(express.static(path.join(__dirname, "/public")));
-
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
 
 // -------------------- SESSION --------------------
 const sessionOptions = {
@@ -71,6 +79,7 @@ const sessionOptions = {
 app.use(session(sessionOptions));
 app.use(flash());
 
+
 // -------------------- PASSPORT --------------------
 app.use(passport.initialize());
 app.use(passport.session());
@@ -78,6 +87,7 @@ app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 passport.deserializeUser(User.deserializeUser());
+
 
 // -------------------- GLOBAL VARIABLES --------------------
 app.use((req, res, next) => {
@@ -88,6 +98,7 @@ app.use((req, res, next) => {
     next();
 });
 
+
 // -------------------- ROUTES --------------------
 app.get("/", (req, res) => {
     res.redirect("/listings");
@@ -96,26 +107,59 @@ app.get("/", (req, res) => {
 app.use("/listings", listingRouter);
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
-app.use("/", bookingRouter); // <--- NEW: Connected Booking Routes here
+app.use("/", bookingRouter);
 
-app.get("/privacy", (req, res) => {
-    res.render("privacy.ejs");
+
+// -------------------- PAYMENT VERIFY (Razorpay) --------------------
+app.post("/payment/verify", async (req, res) => {
+    try {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+        const sign = razorpay_order_id + "|" + razorpay_payment_id;
+
+        const expectedSign = crypto
+            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+            .update(sign.toString())
+            .digest("hex");
+
+        if (expectedSign === razorpay_signature) {
+            console.log("PAYMENT VERIFIED ✔");
+            return res.json({ success: true });
+        }
+
+        console.log("INVALID SIGNATURE ❌");
+        res.status(400).json({ success: false });
+
+    } catch (err) {
+        console.log("VERIFY ERROR:", err);
+        res.status(500).json({ success: false });
+    }
 });
 
-app.get("/terms", (req, res) => {
-    res.render("terms.ejs");
+
+// -------------------- CANCEL PAGE (optional) --------------------
+app.get("/cancel", (req, res) => {
+    res.redirect("/bookings");
 });
+
+
+// -------------------- STATIC PAGES --------------------
+app.get("/privacy", (req, res) => res.render("privacy.ejs"));
+app.get("/terms", (req, res) => res.render("terms.ejs"));
+
 
 // -------------------- 404 HANDLER --------------------
 app.all(/(.*)/, (req, res, next) => {
     next(new ExpressError(404, "Page Not Found"));
 });
 
+
 // -------------------- ERROR HANDLER --------------------
 app.use((err, req, res, next) => {
     const { statusCode = 500, message = "Something went wrong" } = err;
     res.status(statusCode).render("error.ejs", { message });
 });
+
 
 // -------------------- SERVER --------------------
 app.listen(8080, () => {

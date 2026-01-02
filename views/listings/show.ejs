@@ -39,50 +39,66 @@
               </div>
             </div>
 
-            <form action="/listings/<%= listing._id %>/book" method="POST">
+            <form action="/listings/<%= listing._id %>/book" method="GET">
               <div class="border rounded-3 mb-2 overflow-hidden">
                 <div class="d-flex border-bottom">
                   <div class="p-2 w-50 border-end">
                     <label class="small fw-bold text-uppercase d-block text-muted"
                       style="font-size: 0.65rem;">Check-in</label>
-                    <input type="date" name="booking[checkIn]" class="form-control border-0 p-0 shadow-none" style="font-size: 0.875rem;" required>
+                    <input type="date" name="checkIn" id="checkInDate" class="form-control border-0 p-0 shadow-none" 
+                      style="font-size: 0.875rem;" 
+                      min="<%= new Date().toISOString().split('T')[0] %>" required>
                   </div>
                   <div class="p-2 w-50">
                     <label class="small fw-bold text-uppercase d-block text-muted"
                       style="font-size: 0.65rem;">Check-out</label>
-                    <input type="date" name="booking[checkOut]" class="form-control border-0 p-0 shadow-none" style="font-size: 0.875rem;" required>
+                    <input type="date" name="checkOut" id="checkOutDate" class="form-control border-0 p-0 shadow-none" 
+                      style="font-size: 0.875rem;" 
+                      min="<%= new Date().toISOString().split('T')[0] %>" required>
                   </div>
                 </div>
                 <div class="p-2 border-top">
                   <label class="small fw-bold text-uppercase d-block text-muted" style="font-size: 0.65rem;">Nights</label>
-                  <input type="number" name="booking[nights]" id="nightsInput" class="form-control border-0 p-0 shadow-none" style="font-size: 0.875rem;" value="5" min="1" required>
+                  <input type="number" name="nights" id="nightsInput" class="form-control border-0 p-0 shadow-none" 
+                    style="font-size: 0.875rem; background-color: #f8f9fa;" value="1" min="1" readonly>
+                  <small class="text-muted" style="font-size: 0.7rem;">Auto-calculated</small>
                 </div>
                 <div class="p-2 border-top">
                   <label class="small fw-bold text-uppercase d-block text-muted" style="font-size: 0.65rem;">Guests</label>
-                  <select name="booking[guests]" class="form-select border-0 p-0 shadow-none text-dark" style="font-size: 0.875rem;">
+                  <select name="guests" class="form-select border-0 p-0 shadow-none text-dark" style="font-size: 0.875rem;">
                     <option value="1">1 guest</option>
                     <option value="2">2 guests</option>
                     <option value="3">3 guests</option>
+                    <option value="4">4 guests</option>
+                    <option value="5">5 guests</option>
+                    <option value="6">6 guests</option>
                   </select>
                 </div>
               </div>
 
-              <button class="btn btn-danger w-100 py-2 fw-semibold rounded-3" style="background: #ff385c; font-size: 1rem;">Reserve</button>
-              <div class="text-center mt-2"><small class="text-muted" style="font-size: 0.8rem;">You won't be charged yet</small></div>
+              <button type="submit" class="btn btn-danger w-100 py-2 fw-semibold rounded-3" 
+                style="background: #ff385c; font-size: 1rem;">
+                Reserve
+              </button>
+              <div class="text-center mt-2">
+                <small class="text-muted" style="font-size: 0.8rem;">You won't be charged yet</small>
+              </div>
 
               <div class="mt-3 pt-2 border-top">
                 <div class="d-flex justify-content-between mb-2" style="font-size: 0.875rem;">
-                  <span class="text-decoration-underline">&#8377;<%= listing.price %> x <span id="nightsDisplay">5</span> nights</span>
-                  <span id="nightsPriceDisplay">&#8377;<%= (listing.price * 5).toLocaleString("en-IN") %></span>
+                  <span class="text-decoration-underline">
+                    &#8377;<%= listing.price.toLocaleString("en-IN") %> x <span id="nightsDisplay">1</span> night<span id="nightsPlural"></span>
+                  </span>
+                  <span id="nightsPriceDisplay">&#8377;<%= listing.price.toLocaleString("en-IN") %></span>
                 </div>
-                <div class="d-flex justify-content-between mb-2" style="font-size: 0.875rem;">
-                  <span class="text-decoration-underline">Service fee</span>
-                  <span>&#8377;2,500</span>
+                <div class="d-flex justify-content-between mb-2 text-success" style="font-size: 0.875rem;">
+                  <span class="text-decoration-underline">GST (18%)</span>
+                  <span id="taxDisplay">&#8377;<%= Math.round(listing.price * 0.18).toLocaleString("en-IN") %></span>
                 </div>
                 <hr class="my-2">
                 <div class="d-flex justify-content-between fw-bold" style="font-size: 1rem;">
                   <span>Total</span>
-                  <span id="totalPriceDisplay">&#8377;<%= (listing.price * 5 + 2500).toLocaleString("en-IN") %></span>
+                  <span id="totalPriceDisplay">&#8377;<%= Math.round(listing.price * 1.18).toLocaleString("en-IN") %></span>
                 </div>
               </div>
             </form>
@@ -132,7 +148,7 @@
           </div>
         </div>
 
-        <!-- ========== ALL REVIEWS SECTION (MOVED UP) ========== -->
+        <!-- ========== ALL REVIEWS SECTION ========== -->
         <% if(listing.reviews.length > 0) { %>
           <div class="reviews-section mb-4 pb-3 border-bottom">
             <div class="d-flex align-items-center gap-2 mb-3">
@@ -143,14 +159,14 @@
             <!-- Average Rating Box -->
             <% 
             const totalRating = listing.reviews.reduce((sum, r) => sum + r.rating, 0);
-            const avgRating = totalRating / listing.reviews.length;
+            const avgRatingCalc = totalRating / listing.reviews.length;
             %>
             
             <div class="average-rating-box">
-              <div class="average-rating-number"><%= avgRating.toFixed(1) %></div>
+              <div class="average-rating-number"><%= avgRatingCalc.toFixed(1) %></div>
               <div class="average-rating-stars">
                 <% for(let i = 1; i <= 5; i++) { %>
-                  <span class="star <%= i <= Math.round(avgRating) ? 'filled' : '' %>">★</span>
+                  <span class="star <%= i <= Math.round(avgRatingCalc) ? 'filled' : '' %>">★</span>
                 <% } %>
               </div>
               <div class="total-reviews-text">
@@ -270,25 +286,64 @@
 
 <script>
   // Booking price calculation
-  const pricePerNight = <%= listing.price %>;
-  const serviceFee = 2500;
+  const pricePerNight = `<%= listing.price %>`;
+  const taxRate = 0.18;
+  
+  const checkInInput = document.getElementById('checkInDate');
+  const checkOutInput = document.getElementById('checkOutDate');
   const nightsInput = document.getElementById('nightsInput');
   const nightsDisplay = document.getElementById('nightsDisplay');
+  const nightsPlural = document.getElementById('nightsPlural');
   const nightsPriceDisplay = document.getElementById('nightsPriceDisplay');
+  const taxDisplay = document.getElementById('taxDisplay');
   const totalPriceDisplay = document.getElementById('totalPriceDisplay');
 
+  // Calculate nights between dates
+  function calculateNights() {
+    if (!checkInInput.value || !checkOutInput.value) return 1;
+    
+    const checkIn = new Date(checkInInput.value);
+    const checkOut = new Date(checkOutInput.value);
+    const diffTime = checkOut - checkIn;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    return diffDays > 0 ? diffDays : 1;
+  }
+
   function updatePrice() {
-    const nights = parseInt(nightsInput.value) || 5;
+    const nights = calculateNights();
+    nightsInput.value = nights;
+    
     const nightsPrice = pricePerNight * nights;
-    const total = nightsPrice + serviceFee;
+    const subtotal = nightsPrice;
+    const tax = Math.round(subtotal * taxRate);
+    const total = subtotal + tax;
 
     nightsDisplay.textContent = nights;
+    nightsPlural.textContent = nights > 1 ? 's' : '';
     nightsPriceDisplay.textContent = '₹' + nightsPrice.toLocaleString('en-IN');
+    taxDisplay.textContent = '₹' + tax.toLocaleString('en-IN');
     totalPriceDisplay.textContent = '₹' + total.toLocaleString('en-IN');
   }
 
-  nightsInput.addEventListener('change', updatePrice);
-  nightsInput.addEventListener('input', updatePrice);
+  // Update checkout min date when checkin changes
+  if (checkInInput && checkOutInput) {
+    checkInInput.addEventListener('change', function() {
+      if (this.value) {
+        const minCheckOut = new Date(this.value);
+        minCheckOut.setDate(minCheckOut.getDate() + 1);
+        checkOutInput.min = minCheckOut.toISOString().split('T')[0];
+        
+        // If checkout is before new minimum, update it
+        if (checkOutInput.value && checkOutInput.value <= this.value) {
+          checkOutInput.value = checkOutInput.min;
+        }
+      }
+      updatePrice();
+    });
+
+    checkOutInput.addEventListener('change', updatePrice);
+  }
 
   // Star rating feedback
   document.addEventListener('DOMContentLoaded', function() {

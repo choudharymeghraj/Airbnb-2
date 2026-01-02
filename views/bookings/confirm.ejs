@@ -1,0 +1,141 @@
+<% layout('/layouts/boilerplate') %>
+
+<div class="container my-4">
+
+  <h2 class="fw-bold mb-4">Review your booking</h2>
+
+  <div class="row">
+    
+    <!-- LEFT: Details -->
+    <div class="col-lg-7">
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <h5 class="fw-bold mb-2"><%= listing.title %></h5>
+          <p class="text-muted mb-0">
+            <%= listing.location %>, <%= listing.country %>
+          </p>
+        </div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="card-body">
+          <p><strong>Check-in:</strong> <%= bookingData.checkIn %></p>
+          <p><strong>Check-out:</strong> <%= bookingData.checkOut %></p>
+          <p><strong>Nights:</strong> <%= bookingData.nights %></p>
+          <p><strong>Guests:</strong> <%= bookingData.guests %></p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: Price summary -->
+    <div class="col-lg-5">
+      <div class="card p-3">
+        <h5 class="fw-bold mb-3">Price summary</h5>
+
+        <% 
+          const price = listing.price;
+          const nights = parseInt(bookingData.nights);
+          const subtotal = price * nights;
+          const tax = Math.round(subtotal * 0.18);
+          const total = subtotal + tax;
+        %>
+
+        <div class="d-flex justify-content-between mb-2">
+          <span>₹<%= price.toLocaleString('en-IN') %> × <%= nights %> nights</span>
+          <span>₹<%= (price * nights).toLocaleString('en-IN') %></span>
+        </div>
+
+        <div class="d-flex justify-content-between mb-2 text-success">
+          <span>GST (18%)</span>
+          <span>₹<%= tax.toLocaleString('en-IN') %></span>
+        </div>
+
+        <hr>
+
+        <div class="d-flex justify-content-between fw-bold fs-5">
+          <span>Total</span>
+          <span>₹<%= total.toLocaleString('en-IN') %></span>
+        </div>
+
+        <!-- RAZORPAY BUTTON -->
+        <button id="payBtn" class="btn btn-danger w-100 mt-3">
+          Pay & Confirm
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Razorpay Script -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+  const payBtn = document.getElementById("payBtn");
+
+  payBtn.addEventListener("click", async function () {
+
+    // 1️⃣ Request backend to create Razorpay order
+    const res = await fetch("/listings/<%= listing._id %>/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        booking: {
+          checkIn: "<%= bookingData.checkIn %>",
+          checkOut: "<%= bookingData.checkOut %>",
+          nights: "<%= bookingData.nights %>",
+          guests: "<%= bookingData.guests %>"
+        }
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      alert("Error creating order: " + data.message);
+      return;
+    }
+
+    // 2️⃣ Configure Razorpay
+    const options = {
+      key: data.key,
+      amount: data.amount,
+      currency: data.currency,
+      name: "<%= listing.title %>",
+      description: "Booking payment",
+      order_id: data.order.id,
+
+      handler: async function (response) {
+        // 3️⃣ Verify payment on backend
+        const verifyRes = await fetch("/bookings/verify-payment", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            bookingId: data.bookingId
+          }),
+        });
+
+        const verifyData = await verifyRes.json();
+        
+        if (verifyData.success) {
+          // 4️⃣ Redirect to success page
+          window.location.href = `/bookings/${data.bookingId}/success`;
+        } else {
+          alert("Payment verification failed!");
+        }
+      },
+
+      theme: { color: "#ff385c" }
+    };
+
+    const rzp = new Razorpay(options);
+    rzp.open();
+  });
+</script>
