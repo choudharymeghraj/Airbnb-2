@@ -24,7 +24,15 @@ const bookingRouter = require("./routes/booking.js");
 // Razorpay verification dependencies
 const crypto = require("crypto");
 
+const dbUrl = process.env.ATLASDB_URL;
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
+
+async function main() {
+    await mongoose.connect(dbUrl || MONGO_URL);
+    console.log("Connected to DB");
+    await ensureListingIndexes();
+}
+main().catch(err => console.log(err));
 
 
 // -------------------- DATABASE --------------------
@@ -41,13 +49,6 @@ async function ensureListingIndexes() {
         console.warn("Index cleanup skipped:", err.message);
     }
 }
-
-async function main() {
-    await mongoose.connect(MONGO_URL);
-    console.log("Connected to DB");
-    await ensureListingIndexes();
-}
-main().catch(err => console.log(err));
 
 
 // -------------------- VIEW ENGINE --------------------
@@ -162,6 +163,12 @@ app.use((err, req, res, next) => {
 
 
 // -------------------- SERVER --------------------
-app.listen(8080, () => {
-    console.log("Server is running on port 8080");
-});
+// Export the app for Vercel (serverless function)
+module.exports = app;
+
+// Only listen if this file is run directly (not imported)
+if (require.main === module) {
+    app.listen(8080, () => {
+        console.log("Server is running on port 8080");
+    });
+}
