@@ -69,10 +69,15 @@ if (process.env.NODE_ENV === "production") {
         touchAfter: 24 * 3600,
     };
 
-    // Support both connect-mongo APIs: v4+ (create) and older versions (constructor)
-    const store = typeof MongoStore.create === "function"
-        ? MongoStore.create(storeOptions)
-        : new MongoStore(storeOptions);
+    let store;
+
+    if (typeof MongoStore.create === "function") {
+        store = MongoStore.create(storeOptions);
+    } else if (typeof MongoStore === "function") {
+        // Older connect-mongo versions export a factory that needs the session module
+        const LegacyMongoStore = MongoStore(session);
+        store = new LegacyMongoStore(storeOptions);
+    }
 
     if (store && typeof store.on === "function") {
         store.on("error", (err) => {
