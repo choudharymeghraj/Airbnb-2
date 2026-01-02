@@ -10,6 +10,7 @@ const methodOverride = require("method-override");
 const ejsMate = require("ejs-mate");
 const ExpressError = require("./utils/ExpressError.js");
 const session = require("express-session");
+const MongoStore = require("connect-mongo");
 const flash = require("connect-flash");
 const passport = require("passport");
 const LocalStrategy = require("passport-local");
@@ -27,28 +28,8 @@ const crypto = require("crypto");
 const dbUrl = process.env.ATLASDB_URL;
 const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 
-async function main() {
-    await mongoose.connect(dbUrl || MONGO_URL);
-    console.log("Connected to DB");
-    await ensureListingIndexes();
-}
-main().catch(err => console.log(err));
-
-
-// -------------------- DATABASE --------------------
-async function ensureListingIndexes() {
-    try {
-        const collection = mongoose.connection.db.collection("listings");
-        const indexes = await collection.indexes();
-        const titleIndex = indexes.find((idx) => idx.name === "title_1" && idx.unique);
-        if (titleIndex) {
-            await collection.dropIndex("title_1");
-            console.log("Dropped legacy unique index title_1 on listings");
-        }
-    } catch (err) {
-        console.warn("Index cleanup skipped:", err.message);
-    }
-}
+const connectDB = require("./config/db");
+connectDB();
 
 
 // -------------------- VIEW ENGINE --------------------
@@ -66,8 +47,9 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 // -------------------- SESSION --------------------
+// -------------------- SESSION --------------------
 const sessionOptions = {
-    secret: "mysupersecretcode",
+    secret: process.env.SECRET || "mysupersecretcode",
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -76,6 +58,23 @@ const sessionOptions = {
         httpOnly: true,
     },
 };
+
+// Use MongoStore only in production (Vercel)
+if (process.env.NODE_ENV === "production") {
+    const store = MongoStore.create({
+        mongoUrl: dbUrl || MONGO_URL,
+        crypto: {
+            secret: process.env.SECRET || "mysupersecretcode",
+        },
+        touchAfter: 24 * 3600,
+    });
+
+    store.on("error", (err) => {
+        console.log("ERROR in MONGO SESSION STORE", err);
+    });
+
+    sessionOptions.store = store;
+}
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -165,10 +164,3 @@ app.use((err, req, res, next) => {
 // -------------------- SERVER --------------------
 // Export the app for Vercel (serverless function)
 module.exports = app;
-
-// Only listen if this file is run directly (not imported)
-if (require.main === module) {
-    app.listen(8080, () => {
-        console.log("Server is running on port 8080");
-    });
-}
