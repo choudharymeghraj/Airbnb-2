@@ -61,17 +61,24 @@ const sessionOptions = {
 
 // Use MongoStore only in production (Vercel)
 if (process.env.NODE_ENV === "production") {
-    const store = MongoStore.create({
+    const storeOptions = {
         mongoUrl: dbUrl || MONGO_URL,
         crypto: {
             secret: process.env.SECRET || "mysupersecretcode",
         },
         touchAfter: 24 * 3600,
-    });
+    };
 
-    store.on("error", (err) => {
-        console.log("ERROR in MONGO SESSION STORE", err);
-    });
+    // Support both connect-mongo APIs: v4+ (create) and older versions (constructor)
+    const store = typeof MongoStore.create === "function"
+        ? MongoStore.create(storeOptions)
+        : new MongoStore(storeOptions);
+
+    if (store && typeof store.on === "function") {
+        store.on("error", (err) => {
+            console.log("ERROR in MONGO SESSION STORE", err);
+        });
+    }
 
     sessionOptions.store = store;
 }
