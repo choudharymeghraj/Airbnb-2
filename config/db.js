@@ -8,8 +8,16 @@ const connectDB = async () => {
         return;
     }
 
+    let dbUrl = process.env.ATLASDB_URL;
+    const localUrl = "mongodb://127.0.0.1:27017/wanderlust";
+
+    if (dbUrl && dbUrl.includes("xxxxx")) {
+        console.warn("⚠️  Invalid ATLASDB_URL detected (contains 'xxxxx'). Falling back to local DB.");
+        dbUrl = localUrl;
+    }
+
     try {
-        await mongoose.connect(process.env.ATLASDB_URL);
+        await mongoose.connect(dbUrl || localUrl);
         isConnected = true;
         console.log("MongoDB Connected");
     } catch (err) {
