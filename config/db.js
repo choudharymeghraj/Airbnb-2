@@ -17,7 +17,9 @@ const connectDB = async () => {
     }
 
     try {
-        await mongoose.connect(dbUrl || localUrl);
+        await mongoose.connect(dbUrl || localUrl, {
+            serverSelectionTimeoutMS: 5000,
+        });
         isConnected = true;
         console.log("MongoDB Connected");
     } catch (err) {
