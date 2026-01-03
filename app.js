@@ -97,32 +97,30 @@ const initializeSession = async () => {
     passport.use(new LocalStrategy(User.authenticate()));
     passport.serializeUser(User.serializeUser());
     passport.deserializeUser(User.deserializeUser());
+
+    // -------------------- GLOBAL VARIABLES --------------------
+    app.use((req, res, next) => {
+        res.locals.success = req.flash("success");
+        res.locals.error = req.flash("error");
+        res.locals.currentUser = req.user;
+        res.locals.currUser = req.user;
+        next();
+    });
+
+    // -------------------- ROUTES --------------------
+    app.get("/", (req, res) => {
+        res.redirect("/listings");
+    });
+
+    app.use("/listings", listingRouter);
+    app.use("/listings/:id/reviews", reviewRouter);
+    app.use("/", userRouter);
+    app.use("/", bookingRouter);
 };
 
 initializeSession().catch(err => {
     console.error("Failed to initialize session:", err);
 });
-
-
-// -------------------- GLOBAL VARIABLES --------------------
-app.use((req, res, next) => {
-    res.locals.success = req.flash("success");
-    res.locals.error = req.flash("error");
-    res.locals.currentUser = req.user;
-    res.locals.currUser = req.user;
-    next();
-});
-
-
-// -------------------- ROUTES --------------------
-app.get("/", (req, res) => {
-    res.redirect("/listings");
-});
-
-app.use("/listings", listingRouter);
-app.use("/listings/:id/reviews", reviewRouter);
-app.use("/", userRouter);
-app.use("/", bookingRouter);
 
 
 // -------------------- PAYMENT VERIFY (Razorpay) --------------------
