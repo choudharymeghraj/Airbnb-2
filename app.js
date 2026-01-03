@@ -116,61 +116,56 @@ const initializeSession = async () => {
     app.use("/listings/:id/reviews", reviewRouter);
     app.use("/", userRouter);
     app.use("/", bookingRouter);
+
+    // -------------------- PAYMENT VERIFY (Razorpay) --------------------
+    app.post("/payment/verify", async (req, res) => {
+        try {
+            const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+            const sign = razorpay_order_id + "|" + razorpay_payment_id;
+
+            const expectedSign = crypto
+                .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+                .update(sign.toString())
+                .digest("hex");
+
+            if (expectedSign === razorpay_signature) {
+                console.log("PAYMENT VERIFIED ✔");
+                return res.json({ success: true });
+            }
+
+            console.log("INVALID SIGNATURE ❌");
+            res.status(400).json({ success: false });
+
+        } catch (err) {
+            console.log("VERIFY ERROR:", err);
+            res.status(500).json({ success: false });
+        }
+    });
+
+    // -------------------- CANCEL PAGE (optional) --------------------
+    app.get("/cancel", (req, res) => {
+        res.redirect("/bookings");
+    });
+
+    // -------------------- STATIC PAGES --------------------
+    app.get("/privacy", (req, res) => res.render("privacy.ejs"));
+    app.get("/terms", (req, res) => res.render("terms.ejs"));
+
+    // -------------------- 404 HANDLER --------------------
+    app.all(/(.*)/, (req, res, next) => {
+        next(new ExpressError(404, "Page Not Found"));
+    });
+
+    // -------------------- ERROR HANDLER --------------------
+    app.use((err, req, res, next) => {
+        const { statusCode = 500, message = "Something went wrong" } = err;
+        res.status(statusCode).render("error.ejs", { message });
+    });
 };
 
 initializeSession().catch(err => {
     console.error("Failed to initialize session:", err);
-});
-
-
-// -------------------- PAYMENT VERIFY (Razorpay) --------------------
-app.post("/payment/verify", async (req, res) => {
-    try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-
-        const sign = razorpay_order_id + "|" + razorpay_payment_id;
-
-        const expectedSign = crypto
-            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-            .update(sign.toString())
-            .digest("hex");
-
-        if (expectedSign === razorpay_signature) {
-            console.log("PAYMENT VERIFIED ✔");
-            return res.json({ success: true });
-        }
-
-        console.log("INVALID SIGNATURE ❌");
-        res.status(400).json({ success: false });
-
-    } catch (err) {
-        console.log("VERIFY ERROR:", err);
-        res.status(500).json({ success: false });
-    }
-});
-
-
-// -------------------- CANCEL PAGE (optional) --------------------
-app.get("/cancel", (req, res) => {
-    res.redirect("/bookings");
-});
-
-
-// -------------------- STATIC PAGES --------------------
-app.get("/privacy", (req, res) => res.render("privacy.ejs"));
-app.get("/terms", (req, res) => res.render("terms.ejs"));
-
-
-// -------------------- 404 HANDLER --------------------
-app.all(/(.*)/, (req, res, next) => {
-    next(new ExpressError(404, "Page Not Found"));
-});
-
-
-// -------------------- ERROR HANDLER --------------------
-app.use((err, req, res, next) => {
-    const { statusCode = 500, message = "Something went wrong" } = err;
-    res.status(statusCode).render("error.ejs", { message });
 });
 
 
