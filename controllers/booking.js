@@ -217,7 +217,7 @@ module.exports.myBookings = async (req, res) => {
     }
 };
 
-// Cancel booking
+// Cancel booking (delete instead of marking as cancelled)
 module.exports.cancelBooking = async (req, res) => {
     try {
         const { id } = req.params;
@@ -233,10 +233,10 @@ module.exports.cancelBooking = async (req, res) => {
             return res.redirect("/bookings");
         }
         
-        booking.bookingStatus = 'cancelled';
-        await booking.save();
+        // Delete the booking instead of marking as cancelled
+        await Booking.findByIdAndDelete(id);
         
-        req.flash("success", "Booking cancelled successfully!");
+        req.flash("success", "Booking cancelled and removed successfully!");
         res.redirect("/bookings");
         
     } catch (error) {
