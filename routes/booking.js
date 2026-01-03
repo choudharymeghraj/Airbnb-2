@@ -46,4 +46,11 @@ router.post(
   wrapAsync(bookingController.cancelBooking)
 );
 
+// Delete booking
+router.delete(
+  "/bookings/:id",
+  isLoggedIn,
+  wrapAsync(bookingController.cancelBooking)
+);
+
 module.exports = router;
