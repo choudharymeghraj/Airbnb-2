@@ -59,34 +59,32 @@ const sessionOptions = {
     },
 };
 
-// Use MongoStore only in production (Vercel)
-if (process.env.NODE_ENV === "production") {
-    const storeOptions = {
-        mongoUrl: dbUrl || MONGO_URL,
-        crypto: {
-            secret: process.env.SECRET || "mysupersecretcode",
-        },
-        touchAfter: 24 * 3600,
-    };
+// Use MongoStore for both development and production
+const storeOptions = {
+    mongoUrl: dbUrl || MONGO_URL,
+    crypto: {
+        secret: process.env.SECRET || "mysupersecretcode",
+    },
+    touchAfter: 24 * 3600,
+};
 
-    let store;
+let store;
 
-    if (typeof MongoStore.create === "function") {
-        store = MongoStore.create(storeOptions);
-    } else if (typeof MongoStore === "function") {
-        // Older connect-mongo versions export a factory that needs the session module
-        const LegacyMongoStore = MongoStore(session);
-        store = new LegacyMongoStore(storeOptions);
-    }
-
-    if (store && typeof store.on === "function") {
-        store.on("error", (err) => {
-            console.log("ERROR in MONGO SESSION STORE", err);
-        });
-    }
-
-    sessionOptions.store = store;
+if (typeof MongoStore.create === "function") {
+    store = MongoStore.create(storeOptions);
+} else if (typeof MongoStore === "function") {
+    // Older connect-mongo versions export a factory that needs the session module
+    const LegacyMongoStore = MongoStore(session);
+    store = new LegacyMongoStore(storeOptions);
 }
+
+if (store && typeof store.on === "function") {
+    store.on("error", (err) => {
+        console.log("ERROR in MONGO SESSION STORE", err);
+    });
+}
+
+sessionOptions.store = store;
 
 app.use(session(sessionOptions));
 app.use(flash());
