@@ -123,12 +123,12 @@
 
         <div class="d-flex align-items-center justify-content-between border-bottom pb-3 mb-3">
           <div>
-            <h5 class="fw-bold mb-1">Hosted by <%= listing.owner.username %></h5>
+            <h5 class="fw-bold mb-1">Hosted by <%= listing.owner ? listing.owner.username : 'Unknown Host' %></h5>
             <p class="text-muted mb-0 small">Superhost &middot; 2 years hosting</p>
           </div>
           <div class="bg-dark text-white rounded-circle d-flex justify-content-center align-items-center"
             style="width: 48px; height: 48px; font-size: 1.3rem;">
-            <%= listing.owner.username.charAt(0).toUpperCase() %>
+            <%= listing.owner ? listing.owner.username.charAt(0).toUpperCase() : 'U' %>
           </div>
         </div>
 
