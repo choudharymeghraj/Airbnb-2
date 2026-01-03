@@ -48,55 +48,60 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 // -------------------- SESSION --------------------
 // -------------------- SESSION --------------------
-const sessionOptions = {
-    secret: process.env.SECRET || "mysupersecretcode",
-    resave: false,
-    saveUninitialized: true,
-    cookie: {
-        expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
-    },
-};
-
-// Use MongoStore for both development and production
-const storeOptions = {
-    mongoUrl: dbUrl || MONGO_URL,
-    crypto: {
+const initializeSession = async () => {
+    const sessionOptions = {
         secret: process.env.SECRET || "mysupersecretcode",
-    },
-    touchAfter: 24 * 3600,
+        resave: false,
+        saveUninitialized: true,
+        cookie: {
+            expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+        },
+    };
+
+    // Use MongoStore for both development and production
+    const storeOptions = {
+        mongoUrl: dbUrl || MONGO_URL,
+        crypto: {
+            secret: process.env.SECRET || "mysupersecretcode",
+        },
+        touchAfter: 24 * 3600,
+    };
+
+    let store;
+
+    if (typeof MongoStore.create === "function") {
+        store = await MongoStore.create(storeOptions);
+    } else if (typeof MongoStore === "function") {
+        // Older connect-mongo versions export a factory that needs the session module
+        const LegacyMongoStore = MongoStore(session);
+        store = new LegacyMongoStore(storeOptions);
+    }
+
+    if (store && typeof store.on === "function") {
+        store.on("error", (err) => {
+            console.log("ERROR in MONGO SESSION STORE", err);
+        });
+    }
+
+    sessionOptions.store = store;
+
+    app.use(session(sessionOptions));
+    app.use(flash());
+    
+    // -------------------- PASSPORT --------------------
+    app.use(passport.initialize());
+    app.use(passport.session());
+
+    passport.use(new LocalStrategy(User.authenticate()));
+    passport.serializeUser(User.serializeUser());
+    passport.deserializeUser(User.deserializeUser());
 };
 
-let store;
-
-if (typeof MongoStore.create === "function") {
-    store = MongoStore.create(storeOptions);
-} else if (typeof MongoStore === "function") {
-    // Older connect-mongo versions export a factory that needs the session module
-    const LegacyMongoStore = MongoStore(session);
-    store = new LegacyMongoStore(storeOptions);
-}
-
-if (store && typeof store.on === "function") {
-    store.on("error", (err) => {
-        console.log("ERROR in MONGO SESSION STORE", err);
-    });
-}
-
-sessionOptions.store = store;
-
-app.use(session(sessionOptions));
-app.use(flash());
-
-
-// -------------------- PASSPORT --------------------
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.use(new LocalStrategy(User.authenticate()));
-passport.serializeUser(User.serializeUser());
-passport.deserializeUser(User.deserializeUser());
+initializeSession().catch(err => {
+    console.error("Failed to initialize session:", err);
+});
 
 
 // -------------------- GLOBAL VARIABLES --------------------
